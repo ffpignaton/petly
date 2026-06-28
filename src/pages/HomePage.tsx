@@ -76,7 +76,7 @@ export default function HomePage() {
 
   return (
     <div className="pb-20">
-      <TopBar title="Petly 🐾" />
+      <TopBar title="Petly 🐾" userMenu />
       <div className="px-4 py-5 flex flex-col gap-5">
         {/* Greeting */}
         <div>
