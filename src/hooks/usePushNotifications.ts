@@ -29,7 +29,11 @@ export function usePushNotifications() {
       return
     }
 
+    // Timeout de segurança — se o SW demorar mais de 3s, assume não inscrito
+    const timeout = setTimeout(() => setStatus('unsubscribed'), 3000)
+
     navigator.serviceWorker.ready.then(async (reg) => {
+      clearTimeout(timeout)
       const existing = await reg.pushManager.getSubscription()
       if (!existing) {
         setStatus('unsubscribed')
@@ -38,7 +42,9 @@ export function usePushNotifications() {
       // Verify it's still in DB
       const { data } = await getPushSubscription(user.id, existing.endpoint)
       setStatus(data ? 'subscribed' : 'unsubscribed')
-    }).catch(() => setStatus('unsubscribed'))
+    }).catch(() => { clearTimeout(timeout); setStatus('unsubscribed') })
+
+    return () => clearTimeout(timeout)
   }, [user])
 
   const subscribe = useCallback(async () => {
