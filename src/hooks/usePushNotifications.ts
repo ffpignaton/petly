@@ -61,11 +61,15 @@ export function usePushNotifications() {
         setStatus('denied')
         return
       }
+      // Cancela subscription antiga se existir
+      const existing = await reg.pushManager.getSubscription()
+      if (existing) await existing.unsubscribe()
       const sub = await reg.pushManager.subscribe({
         userVisibleOnly: true,
         applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY),
       })
-      await savePushSubscription(user.id, sub.toJSON())
+      const { error } = await savePushSubscription(user.id, sub.toJSON())
+      if (error) throw error
       setStatus('subscribed')
     } catch (err) {
       console.error('Push subscribe error:', err)
