@@ -51,7 +51,11 @@ export function usePushNotifications() {
     if (!user || !VAPID_PUBLIC_KEY) return
     setStatus('loading')
     try {
-      const reg = await navigator.serviceWorker.ready
+      // Aguarda SW com timeout de 5s
+      const reg = await Promise.race([
+        navigator.serviceWorker.ready,
+        new Promise<never>((_, reject) => setTimeout(() => reject(new Error('SW timeout')), 5000)),
+      ]) as ServiceWorkerRegistration
       const permission = await Notification.requestPermission()
       if (permission !== 'granted') {
         setStatus('denied')
@@ -72,7 +76,10 @@ export function usePushNotifications() {
   const unsubscribe = useCallback(async () => {
     setStatus('loading')
     try {
-      const reg = await navigator.serviceWorker.ready
+      const reg = await Promise.race([
+        navigator.serviceWorker.ready,
+        new Promise<never>((_, reject) => setTimeout(() => reject(new Error('SW timeout')), 5000)),
+      ]) as ServiceWorkerRegistration
       const sub = await reg.pushManager.getSubscription()
       if (sub) {
         await deletePushSubscription(sub.endpoint)
