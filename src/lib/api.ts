@@ -108,3 +108,23 @@ export async function updateVetVisit(id: string, updates: Partial<VetVisitInsert
 export async function deleteVetVisit(id: string) {
   return supabase.from('vet_visits').delete().eq('id', id)
 }
+
+// ── Push Subscriptions ────────────────────────────────────────────────────────
+export async function savePushSubscription(userId: string, sub: PushSubscriptionJSON) {
+  const p256dh = sub.keys?.p256dh ?? ''
+  const auth   = sub.keys?.auth   ?? ''
+  return supabase.from('push_subscriptions').upsert({
+    user_id:  userId,
+    endpoint: sub.endpoint!,
+    p256dh,
+    auth,
+  }, { onConflict: 'endpoint' })
+}
+
+export async function deletePushSubscription(endpoint: string) {
+  return supabase.from('push_subscriptions').delete().eq('endpoint', endpoint)
+}
+
+export async function getPushSubscription(userId: string, endpoint: string) {
+  return supabase.from('push_subscriptions').select('id').eq('user_id', userId).eq('endpoint', endpoint).maybeSingle()
+}

@@ -1,14 +1,16 @@
 import { useEffect, useRef, useState } from 'react'
-import { UserCircle, LogOut, MessageCircle, X, Send } from 'lucide-react'
+import { UserCircle, LogOut, MessageCircle, X, Send, Bell, BellOff } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
 import { signOut } from '../../lib/api'
 import { supabase } from '../../lib/supabase'
+import { usePushNotifications } from '../../hooks/usePushNotifications'
 
 export function UserMenu() {
   const { user } = useAuth()
   const [open, setOpen] = useState(false)
   const [showContact, setShowContact] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
+  const { status: pushStatus, subscribe, unsubscribe } = usePushNotifications()
 
   // Close menu when clicking outside
   useEffect(() => {
@@ -47,9 +49,31 @@ export function UserMenu() {
             </div>
 
             {/* Actions */}
+
+            {/* Push notifications toggle */}
+            {pushStatus !== 'unsupported' && (
+              <button
+                onClick={() => {
+                  if (pushStatus === 'subscribed') unsubscribe()
+                  else subscribe()
+                }}
+                disabled={pushStatus === 'loading' || pushStatus === 'denied'}
+                className="w-full flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-colors disabled:opacity-50"
+              >
+                {pushStatus === 'subscribed'
+                  ? <><BellOff size={16} className="text-gray-400" /> Desativar notificações</>
+                  : pushStatus === 'denied'
+                  ? <><Bell size={16} className="text-red-400" /> Notificações bloqueadas</>
+                  : pushStatus === 'loading'
+                  ? <><Bell size={16} className="text-gray-300" /> Carregando...</>
+                  : <><Bell size={16} className="text-green-500" /> Ativar notificações</>
+                }
+              </button>
+            )}
+
             <button
               onClick={() => { setOpen(false); setShowContact(true) }}
-              className="w-full flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+              className="w-full flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-colors border-t border-gray-100"
             >
               <MessageCircle size={16} className="text-blue-500" />
               Entrar em contato
